@@ -14,11 +14,9 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"hack/lib"
-	"hack/resources"
 	"log"
 	"os"
 	"path/filepath"
@@ -84,22 +82,7 @@ func initialize() {
 
 	// Setting config file path
 	lib.CONFIG_PATH = filepath.Join(lib.APP_DATA, "config.json")
-	if !lib.IsFileExist(lib.CONFIG_PATH) {
-		// Create the config if it has not existed
-		err := os.WriteFile(lib.CONFIG_PATH, []byte(resources.ConfigurationContent), 0644)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	// Parsing configuration file
-	if content, err := os.ReadFile(lib.CONFIG_PATH); err == nil {
-		if err_ := json.Unmarshal([]byte(content), &lib.Configuration); err_ != nil {
-			log.Fatal(err_)
-		}
-	} else {
-		log.Fatal(err)
-	}
+	lib.Parse_Json()
 }
 
 func main() {

@@ -48,11 +48,11 @@ const (
 
 // Json types
 type ConfigData struct {
-	seclisturl  string `json:"seclist_url"`
-	cheatsheets struct {
+	Seclisturl  string `json:"seclist_url"`
+	Cheatsheets struct {
 		All []string `json:"all"`
 	}
-	htbtoken string `json:"htbtoken"`
+	Token string `json:"htbtoken"`
 }
 
 var Configuration ConfigData
