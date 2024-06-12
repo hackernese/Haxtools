@@ -4,6 +4,10 @@ import (
 	"sync"
 )
 
+// Command line arguments specific
+var DISABLE_REGION_SELECT bool
+var START_HTB_SERVICE bool
+
 // Goroutine counter
 var Wg sync.WaitGroup
 
@@ -13,6 +17,12 @@ var APP_DATA string // Where custom data of the users will be stored
 var HOME_PATH string
 var CONFIG_PATH string // Where the config.json stands at
 var ETC_PATH string    // Where the etc folder which stores third-party drivers and exe at
+var LOG_PATH string    // Where the logs will be stored
+
+// specific services
+var HTB_PATH string       // Path to store HackTheBox specific configuration
+var HTB_PATH_OVPN string  // Path to the VPN file
+var HTB_PATH_CACHE string // Path to the profile cache json file
 
 // Exit code
 const (
@@ -52,7 +62,9 @@ type ConfigData struct {
 	Cheatsheets struct {
 		All []string `json:"all"`
 	}
-	Token string `json:"htbtoken"`
+	Token          string `json:"htbtoken"`
+	Default_region int    `json:"default_region"`
 }
 
 var Configuration ConfigData
+var CacheProfile UserProfileResponse

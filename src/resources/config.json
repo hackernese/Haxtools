@@ -6,5 +6,6 @@
             "https://book.hacktricks.xyz/",
             "https://github.com/swisskyrepo/PayloadsAllTheThings"
         ]
-    }
+    },
+    "default_region" : 8
 }

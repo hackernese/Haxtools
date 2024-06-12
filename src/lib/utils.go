@@ -3,12 +3,40 @@ package lib
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"hack/resources"
 	"log"
 	"os"
 	"os/exec"
 )
+
+func Parse_Cache_Profile() {
+	if IsFileExist(HTB_PATH_CACHE) {
+		if content, err := os.ReadFile(HTB_PATH_CACHE); err == nil {
+			if err_ := json.Unmarshal([]byte(content), &CacheProfile); err_ != nil {
+				log.Fatal(err_)
+			}
+		} else {
+			log.Fatal(err)
+		}
+	}
+}
+
+func Save_to_Cache() {
+	if IsFileExist(HTB_PATH_CACHE) {
+
+		data, err := json.Marshal(CacheProfile)
+		if err != nil {
+			PrintError("unable to stringify cache in memory")
+			return
+		}
+
+		err_ := os.WriteFile(HTB_PATH_CACHE, data, 0644)
+		if err_ != nil {
+			PrintError("unable to save new cache to disk")
+			return
+		}
+	}
+}
 
 func Parse_Json() {
 	if !IsFileExist(CONFIG_PATH) {
@@ -95,24 +123,4 @@ func MakeDirIfNotExist(path string) {
 			log.Fatal(err)
 		}
 	}
-}
-
-func PrintColorBold(msg string, color string) {
-	fmt.Print(BOLD + color + msg + Reset)
-}
-
-func PrintWarning(msg string) {
-	fmt.Println("[" + BOLD + Yellow + "WARNING" + Reset + "]:" + msg)
-}
-
-func PrintInfo(msg string) {
-	fmt.Println("[" + BOLD + Cyan + "INFO" + Reset + "]:" + msg)
-}
-
-func PrintError(msg string) {
-	fmt.Println("[" + BOLD + Red + "ERROR" + Reset + "]:" + msg)
-}
-
-func PrintOk(msg string) {
-	fmt.Println("[" + BOLD + Green + "OK" + Reset + "]:" + msg)
 }

@@ -38,27 +38,31 @@ func Htb(v flag.Value) {
 			return
 		}
 
-		lib.PrintColorBold("Username: ", lib.Green)
-		fmt.Println(user.Info.Name)
+		lib.PrintColorBold("	+ Username: ", lib.Green)
+		fmt.Println(user.Profile.Name)
 
-		lib.PrintColorBold("Email: ", lib.Green)
-		fmt.Println(user.Info.Email)
+		lib.PrintColorBold("	+ Rank    : ", lib.Green)
+		fmt.Println(user.Profile.Rank)
 
-		lib.PrintColorBold("Avatar: ", lib.Green)
-		fmt.Println(user.Info.Avatar)
+		lib.PrintColorBold("	+ Avatar  : ", lib.Green)
+		fmt.Println(user.Profile.Avatar)
 
-		lib.PrintColorBold("Server ID: ", lib.Green)
-		fmt.Println(user.Info.ServerId)
+		lib.PrintColorBold("	+ Country : ", lib.Green)
+		fmt.Println(user.Profile.Country)
 
-		lib.PrintColorBold("Team: ", lib.Green)
-		fmt.Println(user.Info.Team.Name)
+		lib.PrintColorBold("	+ Team    : ", lib.Green)
+		fmt.Println(user.Profile.Team.Name)
 
-		lib.PrintColorBold("Is vip: ", lib.Green)
-		if user.Info.IsVip {
+		lib.PrintColorBold("	+ VIP     : ", lib.Green)
+		if user.Profile.IsVip {
 			lib.PrintColorBold("yes", lib.Green)
 		} else {
 			lib.PrintColorBold("no", lib.Red)
 		}
+
+		lib.PrintColorBold("	+ Server  : ", lib.Green)
+		fmt.Println(user.Profile.Server)
+
 		fmt.Println()
 
 		// Save and reconfigure config json
@@ -70,11 +74,14 @@ func Htb(v flag.Value) {
 	}
 
 	// Checking if the ovpn file has been downloaded
-	// if !lib.IsFileExist(filepath.Join(lib.APP_DATA, "htb.ovpn")) {
-
-	// 	// Download the VPN file
-
-	// }
+	if !lib.IsVPNfileExist() {
+		// Download the VPN file
+		if err := lib.FetchOpenVPNData(); err != nil {
+			lib.PrintError(err.Error())
+			return
+		}
+		lib.PrintOk(" successfully downloaded vpn configuration")
+	}
 
 	if v.String() == "on" {
 		// Turn on the VPN
