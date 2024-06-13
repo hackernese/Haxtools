@@ -10,14 +10,9 @@ import constant
 
 
 def initialize() -> None:
-
     # Making startup directories
     make_dir_if_not_exist(APP_DATA)
     make_dir_if_not_exist(HTB_PATH)
-
-    # Copy configuration
-    copy_if_not_exist(os.path.join(ASSET_PATH, "config.json"), CONFIG_PATH)
-    constant.CONFIGURATION = json.load(open(CONFIG_PATH))
 
 
 def run() -> None:

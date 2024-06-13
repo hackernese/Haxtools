@@ -1,5 +1,27 @@
+from prettytable import PrettyTable
+
+from logs import format_bold
 import os
 import shutil
+
+
+class PrintTable:
+
+    def __init__(self, *args) -> None:
+        self.table = PrettyTable()
+        self.table.field_names = args
+        self.rows = []
+
+    def add(self, *args):
+        args_list = list(args)
+        args_list[0] = format_bold(str(args[0]), "ok")
+        self.rows.append(args_list)
+        return self
+
+    def display(self):
+        self.table.add_rows(self.rows)
+        self.table.align = "l"
+        print(self.table)
 
 
 def make_dir_if_not_exist(d: str) -> None:

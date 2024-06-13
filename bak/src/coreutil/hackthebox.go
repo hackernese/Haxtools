@@ -7,6 +7,12 @@ import (
 	"os/exec"
 )
 
+func aaa() bool {
+	return true
+}
+
+var aa bool = aaa()
+
 func Htb(v flag.Value) {
 	/*
 		Starting hackthebox service ( VPN ) using HackTheBox APIv4

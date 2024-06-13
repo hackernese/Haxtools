@@ -1,6 +1,9 @@
-automodinit==0.16
+autopep8==2.2.0
 certifi==2024.6.2
 charset-normalizer==3.3.2
 idna==3.7
-requests==2.32.3
+prettytable==3.10.0
+pycodestyle==2.11.1
+tabulate==0.9.0
 urllib3==2.2.1
+wcwidth==0.2.13
