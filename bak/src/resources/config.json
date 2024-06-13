@@ -1,0 +1,11 @@
+{
+    "seclist_url" :"https://github.com/danielmiessler/SecLists",
+    "cheatsheets" : {
+        "all" :[
+            "https://cheatsheetseries.owasp.org/index.html",
+            "https://book.hacktricks.xyz/",
+            "https://github.com/swisskyrepo/PayloadsAllTheThings"
+        ]
+    },
+    "default_region" : 8
+}
