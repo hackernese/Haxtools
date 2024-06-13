@@ -12,6 +12,8 @@ from utils import PrintTable
 import http.client
 import json
 import pprint
+import os
+import subprocess
 
 
 userprofile_api: str = "https://labs.hackthebox.com/api/v4/user/profile/basic/%d"
@@ -206,3 +208,32 @@ def htb_service(args) -> None:
         # Download and save the VPN configuration
         download_vpn(reg_id)
 
+    # Check if there has already been a polkit rule being set
+    # directory /etc/polkit-1/rules.d
+    if not os.path.isfile(HTB_POLKIT_PATH):
+        print("Unable to proceed, no polkit rule detected at /etc/polkit-1/rules.d", error=True)
+        os._exit(2)
+
+    # Check if a systemd-service has already been configured
+    # directory /etc/systemd/system
+    if not os.path.isfile(HTB_SERVICE_PATH):
+        print("Unable to proceed, no systemd service for HackTheBox found at /etc/systemd/system", error=True)
+        os._exit(2)
+
+    # Starting the service
+    if args.htb=="on":
+        l = Loading(" => Turning on HTB instance")
+        subprocess.call(["systemctl", "start", "haxtools-hackthebox"])
+        l.stop(True)
+        print("HTB instance successfully started", ok=True)
+    elif args.htb=="off":
+        l = Loading(" => Turning on HTB instance")
+        subprocess.call(["systemctl", "stop", "haxtools-hackthebox"])
+        l.stop(True)
+        print("HTB instance successfully terminated", ok=True)
+    else:
+        # Enabling the service
+        l = Loading(" => Turning on HTB instance")
+        subprocess.call(["systemctl", "enable", "haxtools-hackthebox"])
+        l.stop(True)
+        print("HTB instance enabled", ok=True)

@@ -1,3 +1,4 @@
+from typing import Dict
 import shutil
 import pathlib
 import os
@@ -14,7 +15,12 @@ LOG_PATH: str = os.path.expanduser(os.path.join(APP_DATA, "log"))  # file
 HTB_PATH: str = os.path.expanduser(os.path.join(APP_DATA, "htb"))
 CACHE_PATH: str = os.path.expanduser(os.path.join(HTB_PATH, "cache.json"))  # file
 HTB_OVPN: str = os.path.join(HTB_PATH, "vpn.ovpn")
-REGIONS = {
+HTB_SERVICE: str = (
+    open(os.path.join(ASSET_PATH, "hackthebox.service")).read() % HTB_OVPN
+)
+HTB_POLKIT_PATH: str = f"/etc/polkit-1/rules.d/haxtools-hackthebox.rules"
+HTB_SERVICE_PATH: str = f"/etc/systemd/system/haxtools-hackthebox.service"
+REGIONS: Dict[int, Dict[str, str]] = {
     1: {"name": "EU Free 1"},
     201: {"name": "EU Free 2"},
     253: {"name": "EU Free 3"},
