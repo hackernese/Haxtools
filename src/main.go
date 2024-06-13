@@ -19,7 +19,9 @@ import (
 	"hack/lib"
 	"log"
 	"os"
+	"os/user"
 	"path/filepath"
+	"strconv"
 )
 
 func parse_args() {
@@ -60,6 +62,21 @@ func parse_args() {
 
 func initialize() {
 
+	// Getting the current user information ( since this will be run as root )
+	var err error
+	lib.CurrentUser, err = user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+	lib.Gid, err = strconv.Atoi(lib.CurrentUser.Gid)
+	if err != nil {
+		log.Fatal(err)
+	}
+	lib.Uid, err = strconv.Atoi(lib.CurrentUser.Uid)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Getting the directory where the exe is standing
 	ex, err := os.Executable()
 	if err != nil {
@@ -91,6 +108,7 @@ func initialize() {
 	lib.HTB_PATH_CACHE = filepath.Join(lib.HTB_PATH, "cache.json")
 	lib.MakeDirIfNotExist(lib.HTB_PATH)
 	lib.Parse_Cache_Profile() // Extract cached HackTheBox profile
+
 }
 
 func main() {

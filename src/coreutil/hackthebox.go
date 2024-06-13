@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"hack/lib"
+	"os/exec"
 )
 
 func Htb(v flag.Value) {
@@ -84,13 +85,33 @@ func Htb(v flag.Value) {
 	}
 
 	if v.String() == "on" {
-		// Turn on the VPN
 
-		lib.PrintInfo("turning on the VPN")
+		channel := lib.PrintLoadingBar(" => Starting HackTheBox service")
+
+		// Turn on the VPN
+		cmd := exec.Command("systemctl", "start", "hackthebox")
+		_, err := cmd.Output()
+		if err != nil {
+			lib.EndPrintingLoadingBar(channel, false)
+			lib.PrintError(err.Error())
+			return
+		}
+
+		lib.EndPrintingLoadingBar(channel, true)
 
 	} else {
+		channel := lib.PrintLoadingBar(" => Stopping HackTheBox service")
+
 		// Turn off the VPN
-		lib.PrintInfo("turning off  the VPN")
+		cmd := exec.Command("systemctl", "stop", "hackthebox")
+		_, err := cmd.Output()
+		if err != nil {
+			lib.EndPrintingLoadingBar(channel, false)
+			lib.PrintError(err.Error())
+			return
+		}
+
+		lib.EndPrintingLoadingBar(channel, true)
 
 	}
 }

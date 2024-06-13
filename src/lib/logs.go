@@ -12,6 +12,48 @@ import (
 var LogFile *os.File
 var Writer *bufio.Writer
 
+func PrintLoadingBar(text string) chan bool {
+
+	channel := make(chan bool)
+	var stop bool = false
+	var status bool = false
+
+	characters := []string{"⠋", "⠙", "⠴", "⠦"}
+
+	go func() {
+		defer close(channel)
+		for !stop {
+
+			for _, char := range characters {
+				fmt.Print(text + " " + char + "\r")
+				time.Sleep(200 * time.Millisecond)
+			}
+
+		}
+
+		// Clear all on screen and append a [OK]
+		if status {
+			fmt.Println(text + fmt.Sprintf(" ✅"))
+		} else {
+			fmt.Println(text + fmt.Sprintf(" ❌"))
+		}
+
+		channel <- true
+	}()
+
+	go func() {
+		status = <-channel
+		stop = true
+	}()
+
+	return channel
+}
+
+func EndPrintingLoadingBar(channel chan bool, status bool) {
+	channel <- status
+	_ = <-channel
+}
+
 func ConfigureLogging() {
 	LOG_PATH = filepath.Join(APP_DATA, "log")
 
@@ -44,8 +86,12 @@ func WriteToLog(content string) {
 
 }
 
+func FormatColorBold(msg string, color string) string {
+	return BOLD + color + msg + Reset
+}
+
 func PrintColorBold(msg string, color string) {
-	fmt.Print(BOLD + color + msg + Reset)
+	fmt.Print(FormatColorBold(msg, color))
 }
 
 func PrintWarning(msg string) {

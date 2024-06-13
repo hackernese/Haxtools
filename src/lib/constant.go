@@ -1,8 +1,14 @@
 package lib
 
 import (
+	"os/user"
 	"sync"
 )
+
+// User information
+var CurrentUser *user.User
+var Uid int
+var Gid int
 
 // Command line arguments specific
 var DISABLE_REGION_SELECT bool

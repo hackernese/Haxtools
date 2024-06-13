@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"hack/resources"
 	"io"
 	"net/http"
 	"os"
@@ -103,14 +104,19 @@ func SwitchRegionVPN(region Regiontype) error {
 
 	// Switching region first
 	client := &http.Client{}
+
+	channel := PrintLoadingBar(" => Switching to " + region.code)
 	resp, err := client.Do(req)
 	if err != nil {
+		EndPrintingLoadingBar(channel, false)
 		return err
 	}
 	defer resp.Body.Close()
 	if e := is_valid_json_response(resp); e != nil {
+		EndPrintingLoadingBar(channel, false)
 		return e
 	}
+	EndPrintingLoadingBar(channel, true)
 
 	var regionresp SwitchRegionResponse
 	body, err := io.ReadAll(resp.Body)
@@ -180,16 +186,22 @@ func FetchOpenVPNData() error {
 
 	req_vpn, _ := http.NewRequest("GET", fmt.Sprintf(getvpn_api, region.real_id), nil)
 	req_vpn.Header.Add("Authorization", "Bearer "+strings.TrimSpace(Configuration.Token))
-	// Downloading the openvpn file
 	client := &http.Client{}
+
+	// Downloading the openvpn file
+
+	channel := PrintLoadingBar(" => Downloading openvpn file")
 	resp_vpn, err_vpn := client.Do(req_vpn)
 	if err_vpn != nil {
+		EndPrintingLoadingBar(channel, false)
 		return err_vpn
 	}
 	defer resp_vpn.Body.Close()
 	if e := is_valid_json_response(resp_vpn); e != nil {
+		EndPrintingLoadingBar(channel, false)
 		return e
 	}
+	EndPrintingLoadingBar(channel, true)
 
 	// Reading the VPN content
 	content, err := io.ReadAll(resp_vpn.Body)
@@ -201,6 +213,20 @@ func FetchOpenVPNData() error {
 	err_ := os.WriteFile(HTB_PATH_OVPN, content, 0644)
 	if err_ != nil {
 		return err_
+	}
+	err = os.Chown(HTB_PATH_OVPN, Uid, Gid)
+	if err != nil {
+		return err
+	}
+
+	// Making a service
+	err_write := os.WriteFile(
+		"/etc/systemd/system/hackthebox.service",
+		[]byte(fmt.Sprintf(resources.HackTheBoxServiceContent, HTB_PATH_OVPN)),
+		0644,
+	)
+	if err_write != nil {
+		return err_write
 	}
 
 	return nil
@@ -215,19 +241,23 @@ func FetchProfileInfo(token string) (UserProfileResponse, error) {
 	req, err := http.NewRequest("GET", userinfo_api, nil)
 	req.Header.Add("Authorization", "Bearer "+strings.TrimSpace(token))
 
-	// Sending the request
 	client := &http.Client{}
+
+	// Sending the request
+	channel := PrintLoadingBar(" => Requesting user information")
 	resp, err := client.Do(req)
 	if err != nil {
-
+		EndPrintingLoadingBar(channel, false)
 		return profile, err
 	}
 	defer resp.Body.Close()
 
 	// Checking the status, if returns an application/json then it succeeds, otherwise it fails
 	if err := is_valid_json_response(resp); err != nil {
+		EndPrintingLoadingBar(channel, false)
 		return profile, err
 	}
+	EndPrintingLoadingBar(channel, true)
 
 	// Extracting the body
 	body, err := io.ReadAll(resp.Body)
@@ -239,18 +269,21 @@ func FetchProfileInfo(token string) (UserProfileResponse, error) {
 	// Making a request to retrieve the profile
 	req_profile, _ := http.NewRequest("GET", fmt.Sprintf(userprofile_api, jsondata.Info.Id), nil)
 	req_profile.Header.Add("Authorization", "Bearer "+strings.TrimSpace(token))
+
+	channel_profile := PrintLoadingBar(" => Request user profile")
 	resp_profile, err_ := client.Do(req_profile)
 	if err_ != nil {
+		EndPrintingLoadingBar(channel, false)
 		return profile, err
 	}
 	defer resp_profile.Body.Close()
 
 	// Checing if the resp successe
-	fmt.Println(resp_profile.Header.Get("Content-Type"))
 	if err_ := is_valid_json_response(resp_profile); err_ != nil {
+		EndPrintingLoadingBar(channel_profile, false)
 		return profile, err_
 	}
-	PrintOk(" token is valid")
+	EndPrintingLoadingBar(channel_profile, true)
 
 	content, err := io.ReadAll(resp_profile.Body)
 	if err != nil {
@@ -260,6 +293,10 @@ func FetchProfileInfo(token string) (UserProfileResponse, error) {
 
 	// caching
 	e := os.WriteFile(HTB_PATH_CACHE, content, 0644)
+	if e != nil {
+		return profile, e
+	}
+	e = os.Chown(HTB_PATH_CACHE, Uid, Gid)
 	if e != nil {
 		return profile, e
 	}
