@@ -1,6 +1,6 @@
 """
     Commands:
-        hack -toolset=<name>    : Open up a toolset
+        hack -toolset=<name> -o  : Open up a toolset
 
         hack -toolset=<name> -n : Provide the name of the toolset
         hack -toolset=<name> -r : Delete a specific toolset
@@ -26,20 +26,26 @@ def toolset(args):
         CONFIGURATION["toolsets"] = {}
         json.dump(CONFIGURATION, open(CONFIG_PATH, "r+"), indent=4)
 
+    # Start the toolset
+    if args.start:
+        pass
+        os._exit(0)
+
+    # Listing all toolsets ( -l )
     if args.list:
 
         if len(CONFIGURATION["toolsets"]) == 0:
             print_("* No toolsets were added.")
             os._exit(0)
 
-        table = PrintTable("", "tools")
+        table = PrintTable("Name", "tools")
         for tool_name, tools in CONFIGURATION["toolsets"].items():
             table.add(tool_name, "\n".join(tools))
         table.display()
-        print_(f" {format_bold("*", ok=True)} Total: {len(CONFIGURATION['toolsets'])}")
+        print_(f" {format_bold("*", "ok")} Total: {len(CONFIGURATION['toolsets'])} set(s)")
         os._exit(0)
 
-    # Add a new toolset if not existed
+    # Add a new toolset if not existed ( -n )
     if args.toolset not in CONFIGURATION["toolsets"]:
         if not args.new:
             print(
@@ -52,7 +58,7 @@ def toolset(args):
         json.dump(CONFIGURATION, open(CONFIG_PATH, "r+"), indent=4)
         print(f'Successfully created new toolset "{args.toolset}"', ok=True)
 
-    # Delete the toolset
+    # Delete the toolset ( -r )
     if args.remove:
         # Remove the toolset
         del CONFIGURATION["toolsets"][args.toolset]
@@ -60,7 +66,7 @@ def toolset(args):
         print(f'Successfully deleted toolset "{args.toolset}"', ok=True)
         os._exit(0)
 
-    # Add new tools
+    # Add new tools ( --add )
     if args.add:
 
         # Checking if the command exist
@@ -80,5 +86,19 @@ def toolset(args):
 
         os._exit(0)
 
-    # print(constant.CONFIGURATION)
-    # print(args.toolset)
+    # Delete a tool out of a set ( --del )
+    if args.delete:
+
+        tools = set(CONFIGURATION["toolsets"][args.toolset])
+
+        # Checking if the command exist
+        for cmd in args.delete.split(","):
+
+            # Looping through each command
+            tools.discard(cmd.strip())
+
+            CONFIGURATION["toolsets"][args.toolset] = list(tools)
+            json.dump(CONFIGURATION, open(CONFIG_PATH, "w"), indent=4)
+
+        print(f"delete : Successfully removed specified tools from \"{args.toolset}\" toolset", ok=True)
+        os._exit(0)

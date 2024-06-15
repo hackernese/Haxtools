@@ -34,13 +34,20 @@ Optional_Args = (
     (
         ["--add", "-a"],
         {
+            "action": "store_true",
             "help": "Add a specific units based on another command",
         },
     ),
     (
         ["--delete", "-d"],
         {
-            "help": "Add a specific units based on another command",
+            "help": "Delete a specific units based on another command",
+        },
+    ),
+    (
+        ["--start", "-s"],
+        {
+            "help": "Start a specific toolset",
         },
     ),
     (
