@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from constant import APP_DATA, CONFIG_PATH, HTB_PATH, ASSET_PATH
 from utils import *
 from feature import *
@@ -20,30 +21,18 @@ def run() -> None:
     initialize()
 
     # Parsing arguments
-    parser = argparse.ArgumentParser(
+    parser: ArgumentParser = argparse.ArgumentParser(
         description="Making your hacking journey more convenient"
     )
 
     # Adding required options
-    required_group = parser.add_mutually_exclusive_group(required=True)
-    required_group.add_argument(
-        "-htb",
-        choices=["on", "off", "enable"],
-        help="Turn on or off HackTheBox service",
-    )
-
-    # Optional arguments
-    parser.add_argument(
-        "--noreg", "--extra_arg", help="Ignore region switching", action="store_true"
-    )
-
-    # parsing arguments
-    args = parser.parse_args()
+    args = set_and_parse_arguments(parser)
 
     # Running the main service
-    for arg in vars(args):
-        if arg in Services:
-            Services[arg](args)
+    p_args = vars(args)
+    for arg in p_args:
+        if arg in Services and p_args[arg] != None:
+            Services[arg]["cmd"](args)
 
 
 if __name__ == "__main__":

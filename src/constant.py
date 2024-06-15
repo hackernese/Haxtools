@@ -18,8 +18,10 @@ HTB_OVPN: str = os.path.join(HTB_PATH, "vpn.ovpn")
 HTB_SERVICE: str = (
     open(os.path.join(ASSET_PATH, "hackthebox.service")).read() % HTB_OVPN
 )
+HTP_POLKIT_ASSET: str = os.path.join(ASSET_PATH, "rules")
+HTP_SERVICE_ASSET: str = os.path.join(ASSET_PATH, "hackthebox.service")
 HTB_POLKIT_PATH: str = f"/etc/polkit-1/rules.d/haxtools-hackthebox.rules"
-HTB_SERVICE_PATH: str = f"/etc/systemd/system/haxtools-hackthebox.service"
+HTB_SERVICE_PATH: str = f"/etc/systemd/system/hackthebox.service"
 REGIONS: Dict[int, Dict[str, str]] = {
     1: {"name": "EU Free 1"},
     201: {"name": "EU Free 2"},

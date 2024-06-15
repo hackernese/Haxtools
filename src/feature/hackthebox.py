@@ -1,7 +1,13 @@
+
 """
     References :
         1. https://github.com/D3vil0p3r/HackTheBox-API
         2. https://documenter.getpostman.com/view/13129365/TVeqbmeq#5cb306a0-9d1d-4b46-b9ca-eea2d105e8e9
+
+    Commands:
+        hack -htb=on : Turning on hackthebox service
+        hack -htb=off : Turning off hackthebox service
+        hack -htb=enable : Enabling hackthebox service on start
 """
 
 from constant import *
@@ -14,6 +20,7 @@ import json
 import pprint
 import os
 import subprocess
+import sh
 
 
 userprofile_api: str = "https://labs.hackthebox.com/api/v4/user/profile/basic/%d"
@@ -181,6 +188,7 @@ def download_vpn(region_id : int) -> bool:
 
 request_profile = lambda id_ , token :__request_with_token(userprofile_api % id_, token=token)
 
+sh.echo
 
 def htb_service(args) -> None:
 
@@ -208,32 +216,57 @@ def htb_service(args) -> None:
         # Download and save the VPN configuration
         download_vpn(reg_id)
 
-    # Check if there has already been a polkit rule being set
-    # directory /etc/polkit-1/rules.d
-    if not os.path.isfile(HTB_POLKIT_PATH):
-        print("Unable to proceed, no polkit rule detected at /etc/polkit-1/rules.d", error=True)
-        os._exit(2)
+    # Check if there has already been a polkit rule and a systemd service being set
+    service_exist = os.path.isfile(HTB_SERVICE_PATH)   # /etc/systemd/system
 
-    # Check if a systemd-service has already been configured
-    # directory /etc/systemd/system
-    if not os.path.isfile(HTB_SERVICE_PATH):
-        print("Unable to proceed, no systemd service for HackTheBox found at /etc/systemd/system", error=True)
+    try:
+        if not service_exist:
+            (print("No hackthebox service detected.", warning=True) if not service_exist else None)
+            print("Root permission is required to setup missing configurations.", info=True)
+            # Adding
+            with sh.contrib.sudo:
+
+                # Create a temporary service file to store the content
+                open("/tmp/hackthebox.service.tmp", "w").write(HTB_SERVICE)
+                sh.cp("/tmp/hackthebox.service.tmp", HTB_SERVICE_PATH)
+                os.remove("/tmp/hackthebox.service.tmp")
+
+                sh.cp(HTP_POLKIT_ASSET, HTB_POLKIT_PATH)
+
+                # Restarting services
+                sh.systemctl("daemon-reload")
+                sh.systemctl("restart", "hackthebox", "polkit")
+    except sh.ErrorReturnCode_1:
+        print("Invalid password.", error=True)
         os._exit(2)
 
     # Starting the service
-    if args.htb=="on":
-        l = Loading(" => Turning on HTB instance")
-        subprocess.call(["systemctl", "start", "haxtools-hackthebox"])
-        l.stop(True)
-        print("HTB instance successfully started", ok=True)
-    elif args.htb=="off":
-        l = Loading(" => Turning on HTB instance")
-        subprocess.call(["systemctl", "stop", "haxtools-hackthebox"])
-        l.stop(True)
-        print("HTB instance successfully terminated", ok=True)
-    else:
-        # Enabling the service
-        l = Loading(" => Turning on HTB instance")
-        subprocess.call(["systemctl", "enable", "haxtools-hackthebox"])
-        l.stop(True)
-        print("HTB instance enabled", ok=True)
+    try:
+
+        l = None
+
+        if args.htb=="on":
+            l = Loading(" => Turning on HTB instance")
+            sh.systemctl("start", "hackthebox")
+            l.stop(True)
+            print("HTB instance successfully started", ok=True)
+        elif args.htb=="off":
+            l = Loading(" => Turning off HTB instance")
+            sh.systemctl("stop", "hackthebox")
+            l.stop(True)
+            print("HTB instance successfully terminated", ok=True)
+        elif args.htb=="disable":
+            l = Loading(" => Disabling HTB instance on startup")
+            sh.systemctl("disable", "hackthebox")
+            l.stop(True)
+            print("HTB instance successfully disabled", ok=True)
+        else:
+            # Enabling the service
+            l = Loading(" => Enabling HTB instance on startup")
+            sh.systemctl("enable", "hackthebox")
+            l.stop(True)
+            print("HTB instance enabled", ok=True)
+    except sh.ErrorReturnCode_1:
+        l.stop(False)
+        print("Invalid password", error=True)
+
