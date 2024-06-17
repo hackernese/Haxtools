@@ -1,8 +1,0 @@
-/* Allow current user to start hackthebox service as root */
-polkit.addRule(function(action, subject) {
-    if (action.id == "org.freedesktop.systemd1.manage-unit-files"){
-        if(action.lookup("unit") == "hackthebox.service"){
-            return polkit.Result.YES;
-        }
-    }
-});
