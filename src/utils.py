@@ -7,14 +7,19 @@ import shutil
 
 class PrintTable:
 
-    def __init__(self, *args) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         self.table = PrettyTable()
         self.table.field_names = args
         self.rows = []
+        self.no_bold_first_column = "nobold" in kwargs and kwargs["nobold"]
 
     def add(self, *args):
         args_list = list(args)
-        args_list[0] = format_bold(str(args[0]), "ok")
+        args_list[0] = (
+            str(args[0])
+            if self.no_bold_first_column
+            else format_bold(str(args[0]), "ok")
+        )
         self.rows.append(args_list)
         return self
 

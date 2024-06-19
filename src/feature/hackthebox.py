@@ -5,6 +5,12 @@
         2. https://documenter.getpostman.com/view/13129365/TVeqbmeq#5cb306a0-9d1d-4b46-b9ca-eea2d105e8e9
 
     Commands:
+        hack -box -l : List all active boxes
+        hack --active-box : List active box
+        hack -box <Name/ID> --start : Spawn a box
+        hack -box <Name/ID> --stop : Stop a box
+        hack -box <Name/ID> --submit=<flag> : Submit a flag
+
         hack -htb=on : Turning on hackthebox service
         hack -htb=off : Turning off hackthebox service
         hack -htb=enable : Enabling hackthebox service on start
@@ -31,6 +37,11 @@ switchvpn_api: str = (
 getvpn_api: str = (
     "https://labs.hackthebox.com/api/v4/access/ovpnfile/%d/0"  # Get the ovpn file here
 )
+active_machines : str = "https://labs.hackthebox.com/api/v4/machine/paginated?per_page=50" # GET
+spawn_machine : str = "https://labs.hackthebox.com/api/v4/machine/play/%s" # POST
+stop_active_machine : str = "https://labs.hackthebox.com/api/v4/machine/stop" # POST
+submit_a_flag : str = "https://labs.hackthebox.com/api/v4/machine/own" # POST with JSON data -> Format : {"flag":"your-flag","id":480,"difficulty":50}
+
 
 
 def __request_with_token(
@@ -184,11 +195,7 @@ def download_vpn(region_id : int) -> bool:
     loader.stop(True)
 
 
-
-
 request_profile = lambda id_ , token :__request_with_token(userprofile_api % id_, token=token)
-
-sh.echo
 
 def htb_service(args) -> None:
 
@@ -270,3 +277,69 @@ def htb_service(args) -> None:
         l.stop(False)
         print("Invalid password", error=True)
 
+
+
+
+def __list_box_or_fatal(loading_msg : str) -> dict:
+    loader = Loading(f" * {loading_msg}")
+    resp, error_msg = __request_with_token(active_machines, token=CONFIGURATION['htbtoken'])
+    if resp==None:
+        loader.stop(False)
+        print(error_msg, error=True)
+        os._exit(1)
+    loader.stop(True)
+
+    return resp
+
+def hackthebox_boxes(args) -> None:
+
+
+    # hack -box -l : List all active boxes
+    # hack -box --active : List active box
+    # hack -box <Name/ID> --start : Spawn a box
+    # hack -box <Name/ID> --stop : Stop a box
+    # hack -box <Name/ID> --submit=<flag> : Submit a flag
+
+    # Make sure the token is already configured
+    if not __check_htbtoken():
+        return
+
+    # List all boxes
+    if args.box =="list":
+
+        resp = __list_box_or_fatal("Requesting all available machines")
+
+        # Printing machines in beautiful tables
+        table = PrintTable("ID", "Name", "Difficulty", "OS", "Seasonal", nobold=True)
+        for record in resp['data']:
+            color = "ok" if record['difficultyText'] == "Easy" else "error" if record['difficultyText']=="Hard" else "warning" if record['difficultyText']=="Medium" else "info"
+            table.add( str(record["id"]),
+                format_bold(
+                    record['name'], color=color
+                ), record['difficultyText'], record['os'],
+                    "YES" if record['labels'] and record['labels'][0]['name']=="SEASONAL" else "No"
+                )
+        table.display()
+
+        # Printing indicator color
+        print_(f" * Total : {len(resp['data'])} boxes")
+        return
+
+    # List the currently active box
+    if args.box =="active":
+
+        resp = __list_box_or_fatal("Requesting the currently active box")
+        boxes_found = 0
+
+        for box in resp['data']:
+            if box['active']:
+                print_(f" * Active box found : {format_bold(box['name'], "ok")}")
+                print_(f" ├─ ID : {box['id']}")
+                print_(f" ├─ OS : {box['os']}")
+                print_(f" └─ Difficulty : {box['difficultyText']}")
+                boxes_found = boxes_found+1
+
+        if boxes_found==0:
+            print("No box is currently active", info=True)
+
+        return

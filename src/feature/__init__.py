@@ -10,6 +10,12 @@ Services = {
             "help": "turn on or off HackTheBox service",
         },
     },
+    "box": {
+        "cmd": hackthebox.hackthebox_boxes,
+        "args": {
+            "help": "Handle box-specific actions ( spawn/terminate/submit flag )",
+        },
+    },
     "toolset": {
         "cmd": smarttools.toolset,
         "args": {"help": "provide easy management on custom toolset"},
@@ -17,6 +23,8 @@ Services = {
 }
 Optional_Args = (
     (["--noreg"], {"help": "ignore region switching", "action": "store_true"}),
+    (["--stop"], {"help": "indicate stopping something", "action": "store_true"}),
+    (["--submit"], {"help": "append to the -box argument to submit flag"}),
     (
         ["--list", "-l"],
         {
