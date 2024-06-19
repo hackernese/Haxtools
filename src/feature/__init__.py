@@ -55,6 +55,7 @@ Optional_Args = (
     (
         ["--start", "-s"],
         {
+            "action": "store_true",
             "help": "Start a specific toolset",
         },
     ),

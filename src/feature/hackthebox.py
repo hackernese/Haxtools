@@ -42,13 +42,13 @@ spawn_machine : str = "https://labs.hackthebox.com/api/v4/machine/play/%s" # POS
 stop_active_machine : str = "https://labs.hackthebox.com/api/v4/machine/stop" # POST
 submit_a_flag : str = "https://labs.hackthebox.com/api/v4/machine/own" # POST with JSON data -> Format : {"flag":"your-flag","id":480,"difficulty":50}
 
-
-
 def __request_with_token(
     url: str,
     method: str = "GET",
     token: str = None,
     success_type: str = "application/json",
+    data : str = "",
+    headers : dict = {}
 ) -> Optional[tuple[str | object,http.client.HTTPResponse]] | None:
     """Making a request to the HTB APIv4 with authorization token
 
@@ -68,8 +68,8 @@ def __request_with_token(
     conn.request(
         method,
         path,
-        "",
-        {"Authorization": f"Bearer {token if token else CONFIGURATION['htbtoken']}"},
+        data,
+        {"Authorization": f"Bearer {token if token else CONFIGURATION['htbtoken']}", **headers},
     )
     response: http.client.HTTPResponse = conn.getresponse()
     result: bytes = response.read()
@@ -277,9 +277,6 @@ def htb_service(args) -> None:
         l.stop(False)
         print("Invalid password", error=True)
 
-
-
-
 def __list_box_or_fatal(loading_msg : str) -> dict:
     loader = Loading(f" * {loading_msg}")
     resp, error_msg = __request_with_token(active_machines, token=CONFIGURATION['htbtoken'])
@@ -304,14 +301,26 @@ def hackthebox_boxes(args) -> None:
     if not __check_htbtoken():
         return
 
+    # Make sure that there are some arguments
+    if args.box != "list" and args.box != "active" and not args.start and not args.stop and not args.submit:
+        return
+
+    # Get a bunch of active boxes
+    loader = Loading(f" * Loading data about existing boxes")
+    resp_json, error_msg = __request_with_token(active_machines, token=CONFIGURATION['htbtoken'])
+    if resp_json==None:
+        loader.stop(False)
+        print(error_msg, error=True)
+        os._exit(1)
+    loader.stop(True)
+
+
     # List all boxes
     if args.box =="list":
 
-        resp = __list_box_or_fatal("Requesting all available machines")
-
         # Printing machines in beautiful tables
         table = PrintTable("ID", "Name", "Difficulty", "OS", "Seasonal", nobold=True)
-        for record in resp['data']:
+        for record in resp_json['data']:
             color = "ok" if record['difficultyText'] == "Easy" else "error" if record['difficultyText']=="Hard" else "warning" if record['difficultyText']=="Medium" else "info"
             table.add( str(record["id"]),
                 format_bold(
@@ -322,16 +331,15 @@ def hackthebox_boxes(args) -> None:
         table.display()
 
         # Printing indicator color
-        print_(f" * Total : {len(resp['data'])} boxes")
+        print_(f" * {format_bold('Total', 'ok')} : {len(resp_json['data'])} boxes")
         return
 
     # List the currently active box
     if args.box =="active":
 
-        resp = __list_box_or_fatal("Requesting the currently active box")
         boxes_found = 0
 
-        for box in resp['data']:
+        for box in resp_json['data']:
             if box['active']:
                 print_(f" * Active box found : {format_bold(box['name'], "ok")}")
                 print_(f" ├─ ID : {box['id']}")
@@ -342,4 +350,86 @@ def hackthebox_boxes(args) -> None:
         if boxes_found==0:
             print("No box is currently active", info=True)
 
+        return
+
+    # Check if -box is a number or a string
+    box_json = None
+    try:
+        # -box value is an integer, possibly an ID
+        box_id = int(args.box.strip())
+        box = [box for box in resp_json['data'] if box['id'] == box_id]
+        if not box:
+            # NO Box found
+            print(f"Unable to find a box with the ID of {box_id}", error=True)
+            os._exit(1)
+
+        box_json = box[0]
+    except ValueError:
+        box = [box for box in resp_json['data'] if box['name'] == args.box]
+        if not box:
+            # No box found
+            print(f"Unable to find a box with the name of \"{args.box}\"", error=True)
+            os._exit(1)
+
+        # Found a box
+        box_json = box[0]
+
+    # Submit a flag
+    if args.submit:
+        loader = Loading(f" * Submiting flag = \"{format_bold(args.submit, 'info')}\"")
+
+        # Make a http request
+        resp_json, error_msg = __request_with_token(submit_a_flag, method="POST",
+        data=json.dumps({
+            "flag":args.submit.strip(),"id":box_json['id'],"difficulty":box_json['difficulty']
+        }),
+        headers={"Content-Type": "application/json"},
+        token=CONFIGURATION['htbtoken'])
+
+        # Error checking
+        if resp_json==None:
+            loader.stop(False)
+            print(error_msg, error=True)
+            os._exit(1)
+
+        # Checking if the flag is correct
+        status = resp_json['status'] != 400
+        loader.stop(status)
+        print(resp_json['message'],  **{'ok' if status else 'error' : True})
+        return
+
+    # Spawn a machine
+    if args.start:
+        loader = Loading(f" * Starting machine \"{format_bold(box_json['name'], 'info')}\"")
+
+        # Make a http request
+        resp_json, error_msg = __request_with_token(spawn_machine % box_json['id'], method="POST", token=CONFIGURATION['htbtoken'])
+
+        # Error checking
+        if resp_json==None:
+            loader.stop(False)
+            print(error_msg, error=True)
+            os._exit(1)
+
+        # Checking if the flag is correct
+        loader.stop(resp_json['success'])
+        print(resp_json['message'],  **{'ok' if resp_json['success'] else 'error' : True})
+        return
+
+    # Stop a machine
+    if args.stop:
+        loader = Loading(f" * Stopping machine \"{format_bold(box_json['name'], 'info')}\"")
+
+        # Make a http request
+        resp_json, error_msg = __request_with_token(stop_active_machine, method="POST", token=CONFIGURATION['htbtoken'])
+
+        # Error checking
+        if resp_json==None:
+            loader.stop(False)
+            print(error_msg, error=True)
+            os._exit(1)
+
+        # Checking if the flag is correct
+        loader.stop(True)
+        print(resp_json['message'], ok=True)
         return
