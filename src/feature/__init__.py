@@ -33,6 +33,13 @@ Optional_Args = (
         },
     ),
     (
+        ["--open", "-o"],
+        {
+            "help": "Open a list out specific units based on another command",
+            "action": "store_true",
+        },
+    ),
+    (
         ["--remove", "-r"],
         {
             "help": "remove a specific units based on another command",

@@ -13,10 +13,15 @@
 from constant import *
 from utils import *
 from logs import *
+from multiprocessing import Process
 import os
 import json
 import pprint
 import shutil
+import subprocess
+
+def __tool_child_process(tool):
+    subprocess.call([tool], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 def toolset(args):
 
@@ -25,11 +30,6 @@ def toolset(args):
         print("New setup detected, setting toolsets in configuration", warning=True)
         CONFIGURATION["toolsets"] = {}
         json.dump(CONFIGURATION, open(CONFIG_PATH, "r+"), indent=4)
-
-    # Start the toolset
-    if args.start:
-        pass
-        os._exit(0)
 
     # Listing all toolsets ( -l )
     if args.list:
@@ -57,6 +57,13 @@ def toolset(args):
         CONFIGURATION["toolsets"][args.toolset] = []
         json.dump(CONFIGURATION, open(CONFIG_PATH, "r+"), indent=4)
         print(f'Successfully created new toolset "{args.toolset}"', ok=True)
+
+    # Start the toolset
+    if args.open:
+        for tool in CONFIGURATION["toolsets"][args.toolset]:
+            Process(target=__tool_child_process, args=[tool]).start()
+            print(f"Started \"{tool}\"", ok=True)
+        os._exit(0)
 
     # Delete the toolset ( -r )
     if args.remove:
