@@ -41,6 +41,8 @@ active_machines : str = "https://labs.hackthebox.com/api/v4/machine/paginated?pe
 spawn_machine : str = "https://labs.hackthebox.com/api/v4/machine/play/%s" # POST
 stop_active_machine : str = "https://labs.hackthebox.com/api/v4/machine/stop" # POST
 submit_a_flag : str = "https://labs.hackthebox.com/api/v4/machine/own" # POST with JSON data -> Format : {"flag":"your-flag","id":480,"difficulty":50}
+machine_info : str = "https://labs.hackthebox.com/api/v4/machine/profile/%s" # GET
+
 
 def __request_with_token(
     url: str,
@@ -288,6 +290,22 @@ def __list_box_or_fatal(loading_msg : str) -> dict:
 
     return resp
 
+
+def __load_box_profile_info_or_fatal(name : str , no_loader=False) -> dict:
+    if not no_loader:
+        loader = Loading(f" * Requesting profile information of box \"{format_bold(name, 'info')}\"")
+
+    resp, error_msg = __request_with_token(machine_info % name, token=CONFIGURATION['htbtoken'])
+    if resp==None:
+        loader.stop(False)
+        print(error_msg, error=True)
+        os._exit(1)
+
+    if not no_loader:
+        loader.stop(True)
+
+    return resp
+
 def hackthebox_boxes(args) -> None:
 
 
@@ -341,8 +359,12 @@ def hackthebox_boxes(args) -> None:
 
         for box in resp_json['data']:
             if box['active']:
+                # Loading profile information
+                response = __load_box_profile_info_or_fatal(box['name'])
+
                 print_(f" * Active box found : {format_bold(box['name'], "ok")}")
                 print_(f" ├─ ID : {box['id']}")
+                print_(f" ├─ IP : {response['info']['ip']}")
                 print_(f" ├─ OS : {box['os']}")
                 print_(f" └─ Difficulty : {box['difficultyText']}")
                 boxes_found = boxes_found+1
@@ -413,7 +435,12 @@ def hackthebox_boxes(args) -> None:
 
         # Checking if the flag is correct
         loader.stop(resp_json['success'])
+
+        # Loading profile information
+        profile = __load_box_profile_info_or_fatal(box_json['name'])
+
         print(resp_json['message'],  **{'ok' if resp_json['success'] else 'error' : True})
+        print_(f" └─ IP : {format_bold(profile['info']['ip'], 'ok')}")
         return
 
     # Stop a machine
