@@ -1,4 +1,5 @@
 from typing import Dict
+from argparse import ArgumentParser
 import shutil
 import pathlib
 import os
@@ -45,3 +46,7 @@ except FileNotFoundError:
         shutil.copyfile(os.path.join(ASSET_PATH, "config.json"), CONFIG_PATH)
 finally:
     CONFIGURATION = json.load(open(CONFIG_PATH))
+
+
+# Global parser object
+GLOBAL_PARSER: ArgumentParser = None

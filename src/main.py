@@ -24,6 +24,7 @@ def run() -> None:
     parser: ArgumentParser = argparse.ArgumentParser(
         description="Making your hacking journey more convenient"
     )
+    constant.GLOBAL_PARSER = parser
 
     # Adding required options
     args = set_and_parse_arguments(parser)

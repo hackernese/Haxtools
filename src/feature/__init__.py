@@ -18,7 +18,11 @@ Services = {
     },
     "toolset": {
         "cmd": smarttools.toolset,
-        "args": {"help": "provide easy management on custom toolset"},
+        "args": {
+            "help": "provide easy management on custom toolset",
+            "nargs": "?",
+            "const": "",
+        },
     },
 }
 Optional_Args = (

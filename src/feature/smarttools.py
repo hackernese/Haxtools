@@ -19,12 +19,12 @@ import json
 import pprint
 import shutil
 import subprocess
+import constant
 
 def __tool_child_process(tool):
     subprocess.call([tool], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 def toolset(args):
-
     # Check if this is a new setip
     if "toolsets" not in CONFIGURATION:
         print("New setup detected, setting toolsets in configuration", warning=True)
@@ -44,6 +44,10 @@ def toolset(args):
         table.display()
         print_(f" {format_bold("*", "ok")} Total: {len(CONFIGURATION['toolsets'])} set(s)")
         os._exit(0)
+
+    if args.toolset == "":
+        constant.GLOBAL_PARSER.print_help()
+        os._exit(1)
 
     # Add a new toolset if not existed ( -n )
     if args.toolset not in CONFIGURATION["toolsets"]:
