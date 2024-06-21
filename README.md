@@ -27,6 +27,7 @@ Execute `hack --help` for more details.
 ## HackTheBox CLI - Usage
 
 To interact with HackTheBox from the CLI. Most likely you will need to create a HackTheBox API token first by navigating to [your HackTheBox profile settings](https://app.hackthebox.com/profile/settings) then click on `CREATE APP TOKEN`.
+
 ![alt text](./.assets/image.png)
 
 Simply follow the instructions and remember to note down the generated token since it won't be shown again. Then, run one of the following commands, and it will ask for your token if it's not already configured.
