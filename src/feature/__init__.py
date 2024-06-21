@@ -53,7 +53,6 @@ Optional_Args = (
     (
         ["--add", "-a"],
         {
-            "action": "store_true",
             "help": "Add a specific units based on another command",
         },
     ),

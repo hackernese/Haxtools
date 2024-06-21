@@ -78,7 +78,7 @@ def __request_with_token(
 
     # Checking if it was valid
     if response.getheader("Content-Type") != success_type:
-        return None, response
+        return None, 'Invalid token, please recheck or generate a new one.' if response.getheader("Content-Type").startswith('text/html') else result.decode('utf-8')
 
     ret = result.decode("utf-8")
     return (ret if success_type == "text/plain; charset=UTF-8" else json.loads(ret), None)
